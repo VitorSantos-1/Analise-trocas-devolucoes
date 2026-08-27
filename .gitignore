@@ -1,0 +1,5 @@
+# Binarios e planilhas de trabalho - nao versionar (a vitrine usa prints no README)
+*.pbix
+*.xlsm
+*.xls
+*.xlsx
