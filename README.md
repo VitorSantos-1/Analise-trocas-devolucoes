@@ -184,3 +184,8 @@ erDiagram
 - **Trocas × limite**: % de devoluções frente ao `limite_trocas` definido por comprador/categoria
 - **Meta × realizado**: `tendencia_vendas` e `meta_faturamento` vs. movimentação real
 - **Qualidade de dados**: `pk_transacao_hash` garante idempotência (sem duplicatas na carga)
+
+## ⚙️ ETL, Qualidade de Dados & Modelo físico
+Pipeline que alimenta o painel (consolidado neste repositório):
+- **`sql/schema.sql`** — DDL real do banco MySQL `trocas` (exportado via `SHOW CREATE TABLE`).
+- **`etl/`** — scripts Python (Pandas + SQLAlchemy): carga do fluxo de trocas e rotinas de **qualidade de dados** (`normalizar_banco.py`, `corrigir_banco.py`, `fix_duplicatas.py`) com chave-hash idempotente.
