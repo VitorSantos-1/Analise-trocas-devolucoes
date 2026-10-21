@@ -120,3 +120,67 @@ projeto de forma imediata. Os prints serão adicionados na pasta `docs/`.
 ## Autor
 
 Vitor Santos — Análise de Dados e Inteligência Comercial (Varejo).
+
+## 🗺️ Modelo de Dados (DER)
+
+Modelo dimensional do banco MySQL `trocas`, com **duas fatos**: `fato_movimentacao` (entradas/saídas de estoque de trocas, com saldo e custo) e `fato_mensal` (metas e limites por comprador/categoria). Renderizado pelo GitHub via Mermaid. *Dados fictícios de demonstração.*
+
+```mermaid
+erDiagram
+    dim_comprador ||--o{ dim_mercadologico : "responsável por"
+    dim_mercadologico ||--o{ dim_produtos : "classifica"
+    dim_produtos ||--o{ fato_movimentacao : "movimenta"
+    dim_lojas ||--o{ fato_movimentacao : "na loja"
+    dim_lojas ||--o{ fato_mensal : "meta por loja"
+    dim_comprador ||--o{ fato_mensal : "meta por comprador"
+    dim_mercadologico ||--o{ fato_mensal : "meta por categoria"
+
+    dim_comprador {
+        int pk_comprador PK
+        varchar comprador UK
+    }
+    dim_lojas {
+        int pk_loja PK
+        varchar loja UK
+    }
+    dim_mercadologico {
+        int pk_mercadologico PK
+        varchar mercadologico UK
+        int fk_comprador FK
+    }
+    dim_produtos {
+        int pk_produto PK
+        varchar produto
+        int fk_mercadologico FK
+    }
+    fato_movimentacao {
+        varchar pk_transacao_hash PK "hash idempotente (dedup)"
+        datetime _data
+        int fk_produto FK
+        int fk_loja FK
+        decimal estoque_anterior
+        decimal quantidade_entrada
+        decimal quantidade_saida
+        decimal estoque_atual
+        decimal custo_unitario
+        decimal custo_total
+        varchar motivo
+    }
+    fato_mensal {
+        int pk_meta PK
+        date _data
+        int id_loja FK
+        int fk_comprador FK
+        int fk_mercadologico FK
+        decimal meta_faturamento
+        decimal tendencia_vendas
+        decimal limite_trocas
+    }
+```
+
+### 📐 Métricas e cálculos derivados (camada analítica / DAX)
+- **Saldo de estoque** (`estoque_atual`) recalculado a cada movimentação (`estoque_anterior + entrada − saída`)
+- **Custo total** = `quantidade × custo_unitário` (impacto financeiro da perda)
+- **Trocas × limite**: % de devoluções frente ao `limite_trocas` definido por comprador/categoria
+- **Meta × realizado**: `tendencia_vendas` e `meta_faturamento` vs. movimentação real
+- **Qualidade de dados**: `pk_transacao_hash` garante idempotência (sem duplicatas na carga)
